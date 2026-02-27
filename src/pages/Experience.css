@@ -1,0 +1,220 @@
+/* ============================================
+   EXPERIENCE PAGE STYLES
+   ============================================ */
+
+.experience-page {
+  animation: fadeIn 0.6s ease;
+}
+
+/* Activities Section */
+.activities-section {
+  padding: 2rem 0 4rem;
+}
+
+.activities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2.5rem;
+}
+
+.activity-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.activity-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-xl);
+}
+
+.activity-image {
+  position: relative;
+  height: 240px;
+  overflow: hidden;
+  background: var(--gray-200);
+}
+
+.activity-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: var(--transition);
+}
+
+.activity-card:hover .activity-image img {
+  transform: scale(1.1);
+}
+
+.activity-icon {
+  position: absolute;
+  bottom: -30px;
+  right: 1.5rem;
+  width: 60px;
+  height: 60px;
+  background: var(--teal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+}
+
+.activity-card:hover .activity-icon {
+  background: var(--teal-dark);
+  transform: rotate(15deg);
+}
+
+.activity-content {
+  padding: 2.5rem 2rem 2rem;
+}
+
+.activity-content h3 {
+  color: var(--ocean);
+  margin-bottom: 1rem;
+}
+
+.activity-content p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* Facilities Section */
+.facilities-section {
+  padding: 4rem 0;
+  background: var(--white);
+}
+
+.facilities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.facility-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--sand-light);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.facility-item:hover {
+  background: var(--sand);
+  border-color: var(--teal);
+  transform: translateX(8px);
+}
+
+.facility-item svg {
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.facility-item span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+/* Testimonials Section */
+.testimonials-section {
+  padding: 4rem 0;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.testimonial-card {
+  background: var(--white);
+  padding: 2.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  position: relative;
+}
+
+.testimonial-card::before {
+  content: '"';
+  position: absolute;
+  top: -20px;
+  left: 2rem;
+  font-size: 6rem;
+  color: var(--sand);
+  font-family: 'Cormorant Garamond', serif;
+  line-height: 1;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.rating {
+  color: var(--gold);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  letter-spacing: 4px;
+}
+
+.testimonial-card p {
+  font-size: 1rem;
+  line-height: 1.7;
+  font-style: italic;
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+}
+
+.testimonial-author {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--sand);
+}
+
+.testimonial-author strong {
+  color: var(--ocean);
+  font-size: 1.05rem;
+}
+
+.testimonial-author span {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .activities-section,
+  .facilities-section,
+  .testimonials-section {
+    padding: 3rem 0;
+  }
+
+  .activities-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .facilities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-content,
+  .testimonial-card {
+    padding: 2rem 1.5rem;
+  }
+}
