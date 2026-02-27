@@ -1,5 +1,9 @@
 # Mangodlong Paradise Beach Resort - React Website
 
+## 🏖️ Project Proposal
+
+This project serves as a proposal for the development of a professional, luxury resort booking website for Mangodlong Paradise Beach Resort. The project is led by Ryan Soberano Briones, Head and Cloud Engineer, in collaboration with the team.
+
 ## 🏖️ Project Overview
 
 A professional, luxury resort booking website built with React, featuring a complete booking engine, accommodation showcase, and guest experience platform for Mangodlong Paradise Beach Resort in Camotes Island, Philippines.
