@@ -114,13 +114,59 @@ const Booking = () => {
     }
   }
 
-  const handleCheckout = () => {
-    const bookingId = 'MPB' + Date.now().toString().slice(-8)
-    updateBookingData({ 
-      bookingId,
-      confirmed: true 
-    })
-    navigate('/confirmation')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
+  const handleCheckout = async () => {
+    setIsSubmitting(true)
+    setSubmitError('')
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || ''
+      const response = await fetch(`${apiUrl}/api/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adults: bookingData.adults,
+          children: bookingData.children,
+          pets: bookingData.pets,
+          roomType: bookingData.roomType,
+          roomName: bookingData.roomName,
+          roomRate: bookingData.roomRate,
+          checkinDate: bookingData.checkinDate instanceof Date
+            ? bookingData.checkinDate.toISOString().split('T')[0]
+            : bookingData.checkinDate,
+          checkoutDate: bookingData.checkoutDate instanceof Date
+            ? bookingData.checkoutDate.toISOString().split('T')[0]
+            : bookingData.checkoutDate,
+          nights: bookingData.nights,
+          guestName: bookingData.guestName,
+          guestEmail: bookingData.guestEmail,
+          guestMobile: bookingData.guestMobile,
+          subtotal: bookingData.subtotal,
+          taxAmount: bookingData.taxAmount,
+          total: bookingData.total
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Booking failed')
+      }
+
+      updateBookingData({
+        bookingId: result.bookingRef,
+        confirmed: true,
+        emailSent: result.emailSent
+      })
+      navigate('/confirmation')
+    } catch (err) {
+      console.error('Checkout error:', err)
+      setSubmitError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -445,10 +491,25 @@ const Booking = () => {
           )}
         </div>
 
+        {/* Submit Error */}
+        {submitError && (
+          <div className="booking-error" style={{
+            background: '#fee2e2',
+            color: '#b91c1c',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            margin: '0 0 16px',
+            fontSize: '14px',
+            gridColumn: '1 / -1'
+          }}>
+            {submitError}
+          </div>
+        )}
+
         {/* Navigation Buttons */}
         <div className="booking-actions">
           {currentStep > 1 && (
-            <button className="btn-secondary" onClick={handleBack}>
+            <button className="btn-secondary" onClick={handleBack} disabled={isSubmitting}>
               <ChevronLeft size={20} />
               Back
             </button>
@@ -456,10 +517,10 @@ const Booking = () => {
           <button 
             className="btn-primary"
             onClick={handleNext}
-            disabled={!canProceed()}
+            disabled={!canProceed() || isSubmitting}
           >
-            {currentStep === 4 ? 'Complete Booking' : 'Continue'}
-            {currentStep < 4 && <ChevronRight size={20} />}
+            {isSubmitting ? 'Processing...' : currentStep === 4 ? `Confirm & Pay ₱${bookingData.total.toLocaleString()}` : 'Continue'}
+            {currentStep < 4 && !isSubmitting && <ChevronRight size={20} />}
           </button>
         </div>
       </div>

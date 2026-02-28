@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useBooking } from '../context/BookingContext'
 import { 
   CheckCircle, Calendar, Home, Users, 
-  Mail, Phone, Download, ArrowLeft 
+  Mail, Phone, Download, ArrowLeft, X 
 } from 'lucide-react'
 import './Confirmation.css'
 
 const Confirmation = () => {
   const navigate = useNavigate()
   const { bookingData, resetBooking } = useBooking()
+  const [showModal, setShowModal] = useState(true)
 
   useEffect(() => {
     if (!bookingData.confirmed) {
@@ -17,14 +18,15 @@ const Confirmation = () => {
     }
   }, [bookingData.confirmed, navigate])
 
-  const handleNewBooking = () => {
-    resetBooking()
-    navigate('/booking')
+  const formatDate = (date) => {
+    if (!date) return ''
+    const d = date instanceof Date ? date : new Date(date)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  const handleDownloadReceipt = () => {
-    // Implement PDF download functionality
-    alert('Receipt download functionality - integrate with PDF generation service')
+  const handleReturnHome = () => {
+    resetBooking()
+    navigate('/')
   }
 
   if (!bookingData.confirmed) {
@@ -33,6 +35,60 @@ const Confirmation = () => {
 
   return (
     <div className="confirmation-page">
+      {/* Modal Overlay */}
+      {showModal && (
+        <div className="confirmation-modal-overlay">
+          <div className="confirmation-modal">
+            <div className="modal-header">
+              <h3>Booking Confirmed</h3>
+              <button className="modal-close" onClick={() => setShowModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-success-icon">
+                <CheckCircle size={56} />
+              </div>
+              <h2 className="modal-heading">
+                You are going to <em>Paradise!</em>
+              </h2>
+              <p className="modal-subtext">Your booking has been confirmed</p>
+
+              <div className="modal-details-card">
+                <div className="modal-detail-row">
+                  <span>Reference</span>
+                  <strong className="accent">#{bookingData.bookingId}</strong>
+                </div>
+                <div className="modal-detail-row">
+                  <span>Room</span>
+                  <strong>{bookingData.roomName}</strong>
+                </div>
+                <div className="modal-detail-row">
+                  <span>Guests</span>
+                  <strong>
+                    {bookingData.adults} {bookingData.adults === 1 ? 'Adult' : 'Adults'}
+                    {bookingData.children > 0 && `, ${bookingData.children} ${bookingData.children === 1 ? 'Child' : 'Children'}`}
+                  </strong>
+                </div>
+                <div className="modal-detail-row">
+                  <span>Dates</span>
+                  <strong>
+                    {formatDate(bookingData.checkinDate)} – {formatDate(bookingData.checkoutDate)}
+                  </strong>
+                </div>
+                <div className="modal-detail-row">
+                  <span>Total Paid</span>
+                  <strong className="accent">₱{bookingData.total.toLocaleString()}</strong>
+                </div>
+              </div>
+
+              <button className="modal-return-btn" onClick={handleReturnHome}>
+                RETURN TO HOME
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="confirmation-container">
         <div className="confirmation-header">
           <div className="success-icon">
@@ -163,6 +219,14 @@ const Confirmation = () => {
             </div>
           </div>
 
+          {/* Email Confirmation Notice */}
+          {bookingData.emailSent && (
+            <div className="email-sent-notice">
+              <Mail size={20} />
+              <span>A confirmation email has been sent to <strong>{bookingData.guestEmail}</strong></span>
+            </div>
+          )}
+
           {/* What's Next */}
           <div className="next-steps-card">
             <h3>What happens next?</h3>
@@ -189,26 +253,11 @@ const Confirmation = () => {
           {/* Action Buttons */}
           <div className="confirmation-actions">
             <button 
-              className="btn-secondary"
-              onClick={handleDownloadReceipt}
-            >
-              <Download size={20} />
-              Download Receipt
-            </button>
-            <button 
               className="btn-primary"
-              onClick={handleNewBooking}
+              onClick={handleReturnHome}
             >
-              Make Another Booking
+              Return to Home
             </button>
-          </div>
-
-          {/* Back to Home */}
-          <div className="back-to-home">
-            <Link to="/" className="btn-text">
-              <ArrowLeft size={18} />
-              Back to Home
-            </Link>
           </div>
         </div>
       </div>
