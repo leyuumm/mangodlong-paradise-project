@@ -1,5 +1,4 @@
--- Supabase SQL Migration: Create bookings table
--- Run this in your Supabase SQL Editor (https://app.supabase.com → SQL Editor)
+-- Supabase SQL Migration: Creating of bookings table
 
 -- Create bookings table
 CREATE TABLE IF NOT EXISTS bookings (

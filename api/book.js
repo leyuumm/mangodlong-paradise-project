@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { jsPDF } from 'jspdf'
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -7,6 +8,11 @@ const supabase = createClient(
 )
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+
+// Use a verified domain sender. Set RESEND_FROM_EMAIL in your environment.
+// Example: "Mangodlong Paradise <bookings@yourdomain.com>"
+// If not set, falls back to onboarding@resend.dev (only delivers to your own Resend account email).
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Mangodlong Paradise <onboarding@resend.dev>'
 
 function generateBookingRef() {
   const num = Math.floor(1000 + Math.random() * 9000)
@@ -236,6 +242,131 @@ function buildConfirmationEmail(booking) {
 `
 }
 
+function generateBookingPDF(booking) {
+  const doc = new jsPDF()
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const margin = 20
+  const contentWidth = pageWidth - margin * 2
+
+  // ── Header banner ──
+  doc.setFillColor(107, 159, 161) // #6b9fa1
+  doc.rect(0, 0, pageWidth, 48, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(20)
+  doc.setFont('helvetica', 'bold')
+  doc.text('MANGODLONG PARADISE', pageWidth / 2, 22, { align: 'center' })
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text('BEACH RESORT  ·  CAMOTES ISLAND', pageWidth / 2, 32, { align: 'center' })
+  doc.setFontSize(9)
+  doc.text('BOOKING CONFIRMATION RECEIPT', pageWidth / 2, 42, { align: 'center' })
+
+  // ── Booking Reference ──
+  let y = 62
+  doc.setTextColor(107, 159, 161)
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('BOOKING REFERENCE', margin, y)
+  doc.setTextColor(60, 60, 60)
+  doc.setFontSize(22)
+  doc.text(`#${booking.booking_ref}`, pageWidth - margin, y, { align: 'right' })
+
+  // Divider
+  y += 8
+  doc.setDrawColor(220, 220, 220)
+  doc.setLineWidth(0.5)
+  doc.line(margin, y, pageWidth - margin, y)
+
+  // ── Detail rows ──
+  const addDetailRow = (label, value) => {
+    y += 16
+    doc.setTextColor(107, 159, 161)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(label, margin, y)
+    doc.setTextColor(60, 60, 60)
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(String(value), margin, y + 8)
+    // Light divider
+    doc.setDrawColor(235, 235, 235)
+    doc.line(margin, y + 14, pageWidth - margin, y + 14)
+    y += 14
+  }
+
+  addDetailRow('GUEST NAME', booking.guest_name)
+  addDetailRow('EMAIL', booking.guest_email)
+  if (booking.guest_mobile) {
+    addDetailRow('MOBILE / WHATSAPP', booking.guest_mobile)
+  }
+  addDetailRow('ROOM', booking.room_name)
+
+  // Guests line
+  let guestStr = `${booking.adults} Adult${booking.adults > 1 ? 's' : ''}`
+  if (booking.children > 0) guestStr += `, ${booking.children} Child${booking.children > 1 ? 'ren' : ''}`
+  if (booking.pets > 0) guestStr += `, ${booking.pets} Pet${booking.pets > 1 ? 's' : ''}`
+  addDetailRow('GUESTS', guestStr)
+
+  addDetailRow('CHECK-IN', formatDate(booking.checkin_date))
+  addDetailRow('CHECK-OUT', formatDate(booking.checkout_date))
+  addDetailRow('DURATION', `${booking.nights} Night${booking.nights > 1 ? 's' : ''}`)
+
+  // ── Payment section ──
+  y += 20
+  doc.setFillColor(250, 248, 244) // light bg
+  doc.roundedRect(margin, y - 6, contentWidth, 60, 3, 3, 'F')
+  doc.setTextColor(107, 159, 161)
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('PAYMENT SUMMARY', margin + 8, y + 6)
+
+  y += 18
+  doc.setTextColor(100, 100, 100)
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Subtotal', margin + 8, y)
+  doc.text(formatCurrency(booking.subtotal), pageWidth - margin - 8, y, { align: 'right' })
+
+  y += 12
+  doc.text('Tax', margin + 8, y)
+  doc.text(formatCurrency(booking.tax_amount), pageWidth - margin - 8, y, { align: 'right' })
+
+  y += 14
+  doc.setDrawColor(107, 159, 161)
+  doc.setLineWidth(0.8)
+  doc.line(margin + 8, y - 4, pageWidth - margin - 8, y - 4)
+  doc.setTextColor(107, 159, 161)
+  doc.setFontSize(14)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Total Paid', margin + 8, y + 4)
+  doc.text(formatCurrency(booking.total), pageWidth - margin - 8, y + 4, { align: 'right' })
+
+  // ── Status badge ──
+  y += 26
+  doc.setFillColor(184, 216, 217) // #b8d8d9
+  doc.roundedRect(margin, y, contentWidth, 20, 3, 3, 'F')
+  doc.setTextColor(50, 100, 102)
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('STATUS: CONFIRMED & PAID', pageWidth / 2, y + 13, { align: 'center' })
+
+  // ── Footer ──
+  y += 34
+  doc.setTextColor(160, 160, 160)
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Thank you for choosing Mangodlong Paradise Beach Resort.', pageWidth / 2, y, { align: 'center' })
+  doc.text('We look forward to welcoming you to Camotes Island.', pageWidth / 2, y + 12, { align: 'center' })
+
+  y += 26
+  doc.setFontSize(8)
+  doc.text(`Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageWidth / 2, y, { align: 'center' })
+
+  // Return as Buffer
+  const arrayBuffer = doc.output('arraybuffer')
+  return Buffer.from(arrayBuffer)
+}
+
 export default async function handler(req, res) {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -309,17 +440,39 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to save booking', details: dbError.message })
     }
 
+    // Generate PDF receipt
+    let pdfBuffer = null
+    try {
+      pdfBuffer = generateBookingPDF(booking)
+    } catch (pdfError) {
+      console.error('PDF generation error:', pdfError)
+    }
+
     // Send confirmation email via Resend
     let emailSent = false
     try {
       const emailHtml = buildConfirmationEmail(booking)
 
-      await resend.emails.send({
-        from: 'Mangodlong Paradise <onboarding@resend.dev>',
+      // Build email payload
+      const emailPayload = {
+        from: FROM_EMAIL,
         to: [guestEmail],
-        subject: `Booking Confirmed: Mangodlong Paradise #${bookingRef} – ${new Date().toISOString()}`,
+        subject: `Booking Confirmed: Mangodlong Paradise #${bookingRef}`,
         html: emailHtml
-      })
+      }
+
+      // Attach PDF receipt if generated successfully
+      if (pdfBuffer) {
+        emailPayload.attachments = [
+          {
+            filename: `Mangodlong-Paradise-Booking-${bookingRef}.pdf`,
+            content: pdfBuffer.toString('base64'),
+            content_type: 'application/pdf'
+          }
+        ]
+      }
+
+      await resend.emails.send(emailPayload)
 
       emailSent = true
 
